@@ -23,11 +23,32 @@
             color: white;
         }
 
-        .click-count {
-            font-size: 3rem;
-            font-weight: bold;
+        .currency-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid #ffdd57;
+            border-radius: 18px;
+            padding: 10px 28px;
+            box-shadow: 0 0 12px 0 #ffdd5777;
             margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .coin-count-text {
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .coin-image {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid #ffdd57;
+            background: #fffbe0;
+            box-shadow: 0 0 8px #ffdd5788;
+            object-fit: contain;
         }
 
         .clicker-image {
@@ -73,49 +94,55 @@
     </style>
 </head>
 <body>
-    <div class="click-count" id="clickCount">0</div>
+    <div class="currency-box">
+        <span class="coin-count-text" id="coinCount">0</span>
+        <img src="coin.png" alt="Монети" class="coin-image">
+    </div>
+
     <img src="colt_scstore_cash_pin.png" alt="Клікни!" class="clicker-image" id="clickerImage">
 
     <div class="controls">
-        <button class="btn" id="resetBtn">Скинути рахунок</button>
+        <button class="btn" id="resetBtn">Скинути монети</button>
     </div>
     <div class="timer" id="timerText"></div>
 
     <audio id="clickSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9c1f6c.mp3"></audio>
 
     <script>
-        let clickCount = Number(localStorage.getItem('clickCount')) || 0;
+        // Змінна монети піднята у самий верх
+        let moneti = Number(localStorage.getItem('moneti')) || 0;
+
         let timer = null;
         let timeLeft = 10;
         let timerActive = false;
 
-        const clickCountElem = document.getElementById('clickCount');
+        const coinCountElem = document.getElementById('coinCount');
         const clickerImage = document.getElementById('clickerImage');
         const resetBtn = document.getElementById('resetBtn');
         const timerText = document.getElementById('timerText');
         const clickSound = document.getElementById('clickSound');
 
-        // Відображення рахунку
-        function updateClickCount() {
-            clickCountElem.textContent = clickCount;
-            localStorage.setItem('clickCount', clickCount);
+        // Відображення монет
+        function updateCoinCount() {
+            coinCountElem.textContent = moneti;
+            localStorage.setItem('moneti', moneti);
         }
-        updateClickCount();
+        updateCoinCount();
 
         // Анімація і звук
         clickerImage.addEventListener('click', () => {
-            clickCount++;
-            updateClickCount();
+            moneti++;
+            updateCoinCount();
             clickerImage.classList.add('clicked');
             clickSound.currentTime = 0;
             clickSound.play();
             setTimeout(() => clickerImage.classList.remove('clicked'), 120);
         });
 
-        // Скинути рахунок
+        // Скинути монети
         resetBtn.addEventListener('click', () => {
-            clickCount = 0;
-            updateClickCount();
+            moneti = 0;
+            updateCoinCount();
         });
 
     </script>
