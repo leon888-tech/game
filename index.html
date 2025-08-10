@@ -16,17 +16,14 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             color: white;
         }
 
         .click-count {
             font-size: 3rem;
             font-weight: bold;
-            margin-bottom: 40px;
+            text-align: center;
+            padding: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
@@ -36,14 +33,18 @@
             cursor: pointer;
             transition: transform 0.1s ease;
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .clicker-image:hover {
-            transform: scale(1.05);
+            transform: translate(-50%, -50%) scale(1.05);
         }
 
         .clicker-image:active {
-            transform: scale(0.95);
+            transform: translate(-50%, -50%) scale(0.95);
         }
     </style>
 </head>
