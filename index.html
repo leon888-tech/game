@@ -78,7 +78,6 @@
 
     <div class="controls">
         <button class="btn" id="resetBtn">Скинути рахунок</button>
-        <button class="btn" id="startBtn">Старт таймеру (10 сек)</button>
     </div>
     <div class="timer" id="timerText"></div>
 
@@ -93,7 +92,6 @@
         const clickCountElem = document.getElementById('clickCount');
         const clickerImage = document.getElementById('clickerImage');
         const resetBtn = document.getElementById('resetBtn');
-        const startBtn = document.getElementById('startBtn');
         const timerText = document.getElementById('timerText');
         const clickSound = document.getElementById('clickSound');
 
@@ -106,13 +104,8 @@
 
         // Анімація і звук
         clickerImage.addEventListener('click', () => {
-            if (timerActive) {
-                clickCount++;
-                updateClickCount();
-            } else if (!timer) {
-                clickCount++;
-                updateClickCount();
-            }
+            clickCount++;
+            updateClickCount();
             clickerImage.classList.add('clicked');
             clickSound.currentTime = 0;
             clickSound.play();
@@ -125,26 +118,6 @@
             updateClickCount();
         });
 
-        // Таймер
-        startBtn.addEventListener('click', () => {
-            if (timer) return;
-            timerActive = true;
-            timeLeft = 10;
-            timerText.textContent = `Залишилось часу: ${timeLeft} сек`;
-            startBtn.disabled = true;
-
-            timer = setInterval(() => {
-                timeLeft--;
-                timerText.textContent = `Залишилось часу: ${timeLeft} сек`;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    timer = null;
-                    timerActive = false;
-                    timerText.textContent = `Час вийшов! Твій результат: ${clickCount}`;
-                    startBtn.disabled = false;
-                }
-            }, 1000);
-        });
     </script>
 </body>
 </html>
