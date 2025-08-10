@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Clicker Game</title>
+    <title>Клікер-гра</title>
     <style>
         * {
             margin: 0;
@@ -26,7 +26,7 @@
         .click-count {
             font-size: 3rem;
             font-weight: bold;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
@@ -34,30 +34,116 @@
             width: 200px;
             height: 200px;
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: transform 0.1s ease, box-shadow 0.2s;
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
         }
 
-        .clicker-image:hover {
-            transform: scale(1.05);
+        .clicker-image.clicked {
+            box-shadow: 0 0 20px 5px #ffdd57;
+            transform: scale(1.1);
         }
 
-        .clicker-image:active {
-            transform: scale(0.95);
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: #ffdd57;
+            color: #764ba2;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #ffe683;
+        }
+
+        .timer {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="click-count" id="clickCount">0</div>
-    
-    <img src="colt_scstore_cash_pin.png" alt="Click to count!" class="clicker-image" id="clickerImage">
+    <img src="colt_scstore_cash_pin.png" alt="Клікни!" class="clicker-image" id="clickerImage">
+
+    <div class="controls">
+        <button class="btn" id="resetBtn">Скинути рахунок</button>
+        <button class="btn" id="startBtn">Старт таймеру (10 сек)</button>
+    </div>
+    <div class="timer" id="timerText"></div>
+
+    <audio id="clickSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9c1f6c.mp3"></audio>
 
     <script>
-        let clickCount = 0;
-        
-        document.getElementById('clickerImage').addEventListener('click', () => {
-            clickCount++;
-            document.getElementById('clickCount').textContent = clickCount;
+        let clickCount = Number(localStorage.getItem('clickCount')) || 0;
+        let timer = null;
+        let timeLeft = 10;
+        let timerActive = false;
+
+        const clickCountElem = document.getElementById('clickCount');
+        const clickerImage = document.getElementById('clickerImage');
+        const resetBtn = document.getElementById('resetBtn');
+        const startBtn = document.getElementById('startBtn');
+        const timerText = document.getElementById('timerText');
+        const clickSound = document.getElementById('clickSound');
+
+        // Відображення рахунку
+        function updateClickCount() {
+            clickCountElem.textContent = clickCount;
+            localStorage.setItem('clickCount', clickCount);
+        }
+        updateClickCount();
+
+        // Анімація і звук
+        clickerImage.addEventListener('click', () => {
+            if (timerActive) {
+                clickCount++;
+                updateClickCount();
+            } else if (!timer) {
+                clickCount++;
+                updateClickCount();
+            }
+            clickerImage.classList.add('clicked');
+            clickSound.currentTime = 0;
+            clickSound.play();
+            setTimeout(() => clickerImage.classList.remove('clicked'), 120);
+        });
+
+        // Скинути рахунок
+        resetBtn.addEventListener('click', () => {
+            clickCount = 0;
+            updateClickCount();
+        });
+
+        // Таймер
+        startBtn.addEventListener('click', () => {
+            if (timer) return;
+            timerActive = true;
+            timeLeft = 10;
+            timerText.textContent = `Залишилось часу: ${timeLeft} сек`;
+            startBtn.disabled = true;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerText.textContent = `Залишилось часу: ${timeLeft} сек`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timer = null;
+                    timerActive = false;
+                    timerText.textContent = `Час вийшов! Твій результат: ${clickCount}`;
+                    startBtn.disabled = false;
+                }
+            }, 1000);
         });
     </script>
 </body>
