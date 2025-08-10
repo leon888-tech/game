@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Clicker Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .click-count {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .clicker-image {
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        }
+
+        .clicker-image:hover {
+            transform: scale(1.05);
+        }
+
+        .clicker-image:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="click-count" id="clickCount">0</div>
+    
+    <img src="colt_scstore_cash_pin.png" alt="Click to count!" class="clicker-image" id="clickerImage">
+
+    <script>
+        let clickCount = 0;
+        
+        document.getElementById('clickerImage').addEventListener('click', () => {
+            clickCount++;
+            document.getElementById('clickCount').textContent = clickCount;
+        });
+    </script>
+</body>
+</html>
