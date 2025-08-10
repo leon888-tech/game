@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Clicker Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .cash-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .clicker-image {
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            margin: 20px auto;
+            display: block;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        }
+
+        .clicker-image:hover {
+            transform: scale(1.05);
+        }
+
+        .clicker-image:active {
+            transform: scale(0.95);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .upgrade {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .upgrade:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+        }
+
+        .upgrade:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upgrade-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .upgrade-cost {
+            color: #ffd700;
+            font-size: 0.9rem;
+        }
+
+        .upgrade-level {
+            color: #90EE90;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .click-effect {
+            position: absolute;
+            pointer-events: none;
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .achievement {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.5s ease;
+            z-index: 1000;
+        }
+
+        .achievement.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="cash-display" id="cashDisplay">$0</div>
+        
+        <img src="colt_scstore_cash_pin.png" alt="Click to earn cash!" class="clicker-image" id="clickerImage">
+        
+        <div class="stats">
+            <div class="stat">
+                <div>Cash per Click</div>
+                <div id="cashPerClick">$1</div>
+            </div>
+            <div class="stat">
+                <div>Cash per Second</div>
+                <div id="cashPerSecond">$0</div>
+            </div>
+            <div class="stat">
+                <div>Total Clicks</div>
+                <div id="totalClicks">0</div>
+            </div>
+        </div>
+
+        <div class="upgrades">
+            <div class="upgrade" id="clickUpgrade">
+                <div class="upgrade-name">Better Click</div>
+                <div class="upgrade-cost">Cost: $10</div>
+                <div class="upgrade-level">Level: 0</div>
+            </div>
+            <div class="upgrade" id="autoClicker">
+                <div class="upgrade-name">Auto Clicker</div>
+                <div class="upgrade-cost">Cost: $50</div>
+                <div class="upgrade-level">Level: 0</div>
+            </div>
+            <div class="upgrade" id="megaClicker">
+                <div class="upgrade-name">Mega Clicker</div>
+                <div class="upgrade-cost">Cost: $200</div>
+                <div class="upgrade-level">Level: 0</div>
+            </div>
+            <div class="upgrade" id="cashFactory">
+                <div class="upgrade-name">Cash Factory</div>
+                <div class="upgrade-cost">Cost: $500</div>
+                <div class="upgrade-level">Level: 0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ClickerGame {
+            constructor() {
+                this.cash = 0;
+                this.cashPerClick = 1;
+                this.cashPerSecond = 0;
+                this.totalClicks = 0;
+                this.upgrades = {
+                    clickUpgrade: { level: 0, cost: 10, baseCost: 10, multiplier: 1.5 },
+                    autoClicker: { level: 0, cost: 50, baseCost: 50, multiplier: 1.3 },
+                    megaClicker: { level: 0, cost: 200, baseCost: 200, multiplier: 1.4 },
+                    cashFactory: { level: 0, cost: 500, baseCost: 500, multiplier: 1.6 }
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.startAutoClicker();
+                this.loadGame();
+            }
+
+            setupEventListeners() {
+                document.getElementById('clickerImage').addEventListener('click', () => this.click());
+                
+                document.getElementById('clickUpgrade').addEventListener('click', () => this.buyUpgrade('clickUpgrade'));
+                document.getElementById('autoClicker').addEventListener('click', () => this.buyUpgrade('autoClicker'));
+                document.getElementById('megaClicker').addEventListener('click', () => this.buyUpgrade('megaClicker'));
+                document.getElementById('cashFactory').addEventListener('click', () => this.buyUpgrade('cashFactory'));
+            }
+
+            click() {
+                this.cash += this.cashPerClick;
+                this.totalClicks++;
+                this.updateDisplay();
+                this.createClickEffect();
+                this.checkAchievements();
+                this.saveGame();
+            }
+
+            createClickEffect() {
+                const effect = document.createElement('div');
+                effect.className = 'click-effect';
+                effect.textContent = `+$${this.cashPerClick}`;
+                effect.style.left = Math.random() * window.innerWidth + 'px';
+                effect.style.top = Math.random() * window.innerHeight + 'px';
+                document.body.appendChild(effect);
+                
+                setTimeout(() => effect.remove(), 1000);
+            }
+
+            buyUpgrade(upgradeType) {
+                const upgrade = this.upgrades[upgradeType];
+                if (this.cash >= upgrade.cost) {
+                    this.cash -= upgrade.cost;
+                    upgrade.level++;
+                    
+                    switch(upgradeType) {
+                        case 'clickUpgrade':
+                            this.cashPerClick = Math.floor(1 + upgrade.level * 2);
+                            break;
+                        case 'autoClicker':
+                            this.cashPerSecond += 1;
+                            break;
+                        case 'megaClicker':
+                            this.cashPerClick = Math.floor(this.cashPerClick * 1.5);
+                            break;
+                        case 'cashFactory':
+                            this.cashPerSecond += 5;
+                            break;
+                    }
+                    
+                    upgrade.cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.multiplier, upgrade.level));
+                    this.updateDisplay();
+                    this.saveGame();
+                }
+            }
+
+            startAutoClicker() {
+                setInterval(() => {
+                    this.cash += this.cashPerSecond;
+                    this.updateDisplay();
+                    this.saveGame();
+                }, 1000);
+            }
+
+            updateDisplay() {
+                document.getElementById('cashDisplay').textContent = `$${this.formatNumber(this.cash)}`;
+                document.getElementById('cashPerClick').textContent = `$${this.formatNumber(this.cashPerClick)}`;
+                document.getElementById('cashPerSecond').textContent = `$${this.formatNumber(this.cashPerSecond)}`;
+                document.getElementById('totalClicks').textContent = this.formatNumber(this.totalClicks);
+                
+                // Update upgrade displays
+                Object.keys(this.upgrades).forEach(key => {
+                    const upgrade = this.upgrades[key];
+                    const element = document.getElementById(key);
+                    element.querySelector('.upgrade-cost').textContent = `Cost: $${this.formatNumber(upgrade.cost)}`;
+                    element.querySelector('.upgrade-level').textContent = `Level: ${upgrade.level}`;
+                    
+                    // Disable if can't afford
+                    element.disabled = this.cash < upgrade.cost;
+                });
+            }
+
+            formatNumber(num) {
+                if (num >= 1e12) return (num / 1e12).toFixed(1) + 'T';
+                if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+                if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+                if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+                return Math.floor(num);
+            }
+
+            checkAchievements() {
+                const achievements = [
+                    { condition: this.totalClicks >= 100, text: "Clicker Beginner!", cash: 100 },
+                    { condition: this.totalClicks >= 500, text: "Clicker Pro!", cash: 500 },
+                    { condition: this.totalClicks >= 1000, text: "Clicker Master!", cash: 1000 },
+                    { condition: this.cash >= 10000, text: "Rich!", cash: 10000 },
+                    { condition: this.cash >= 100000, text: "Millionaire!", cash: 100000 }
+                ];
+
+                achievements.forEach(achievement => {
+                    if (achievement.condition && !this.achievementsShown) {
+                        this.showAchievement(achievement.text, achievement.cash);
+                    }
+                });
+            }
+
+            showAchievement(text, cash) {
+                const achievement = document.createElement('div');
+                achievement.className = 'achievement';
+                achievement.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 5px;">${text}</div>
+                    <div>Bonus: $${this.formatNumber(cash)}</div>
+                `;
+                document.body.appendChild(achievement);
+                
+                this.cash += cash;
+                this.updateDisplay();
+                
+                setTimeout(() => achievement.classList.add('show'), 100);
+                setTimeout(() => {
+                    achievement.classList.remove('show');
+                    setTimeout(() => achievement.remove(), 500);
+                }, 3000);
+            }
+
+            saveGame() {
+                const gameData = {
+                    cash: this.cash,
+                    cashPerClick: this.cashPerClick,
+                    cashPerSecond: this.cashPerSecond,
+                    totalClicks: this.totalClicks,
+                    upgrades: this.upgrades
+                };
+                localStorage.setItem('clickerGame', JSON.stringify(gameData));
+            }
+
+            loadGame() {
+                const saved = localStorage.getItem('clickerGame');
+                if (saved) {
+                    const gameData = JSON.parse(saved);
+                    this.cash = gameData.cash || 0;
+                    this.cashPerClick = gameData.cashPerClick || 1;
+                    this.cashPerSecond = gameData.cashPerSecond || 0;
+                    this.totalClicks = gameData.totalClicks || 0;
+                    this.upgrades = gameData.upgrades || this.upgrades;
+                    this.updateDisplay();
+                }
+            }
+        }
+
+        // Start the game when page loads
+        window.addEventListener('load', () => {
+            new ClickerGame();
+        });
+    </script>
+</body>
+</html>
