@@ -95,23 +95,24 @@
     <div class="timer" id="timerText"></div>
     <audio id="clickSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9c1f6c.mp3"></audio>
     <script>
-        // Змінна монети піднята у самий верх
+        // Змінна монети оголошена на самому початку!
         let moneti = Number(localStorage.getItem('moneti')) || 0;
         let timer = null;
         let timeLeft = 10;
         let timerActive = false;
+
         const coinCountElem = document.getElementById('coinCount');
         const clickerImage = document.getElementById('clickerImage');
         const resetBtn = document.getElementById('resetBtn');
         const timerText = document.getElementById('timerText');
         const clickSound = document.getElementById('clickSound');
-        // Відображення монет
+
         function updateCoinCount() {
             coinCountElem.textContent = moneti;
             localStorage.setItem('moneti', moneti);
         }
         updateCoinCount();
-        // Анімація і звук
+
         clickerImage.addEventListener('click', () => {
             moneti++;
             updateCoinCount();
@@ -120,7 +121,7 @@
             clickSound.play();
             setTimeout(() => clickerImage.classList.remove('clicked'), 120);
         });
-        // Скинути монети
+
         resetBtn.addEventListener('click', () => {
             moneti = 0;
             updateCoinCount();
