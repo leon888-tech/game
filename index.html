@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Клікер-гра</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -17,7 +13,6 @@
             color: white;
         }
         .currency-box {
-            /* Фіксуємо зверху */
             position: fixed;
             top: 0;
             left: 50%;
@@ -31,7 +26,7 @@
             padding: 14px 36px 12px 36px;
             box-shadow: 0 8px 24px 0 #ffdd5777;
             z-index: 1000;
-            min-width: 230px;
+            min-width: 220px;
         }
         .coin-count-text {
             font-size: 2.2rem;
@@ -47,31 +42,51 @@
             box-shadow: 0 0 8px #ffdd5788;
             object-fit: contain;
         }
-        .main-content {
+        .tabs {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin-top: 100px;
+            width: 100%;
             justify-content: center;
-            height: 100vh;
-            padding-top: 80px; /* Щоб контент не їхав під валюту */
+            gap: 10px;
         }
+        .tab-btn {
+            padding: 10px 24px;
+            background: #ffdd57;
+            color: #764ba2;
+            font-weight: bold;
+            border: none;
+            border-radius: 7px 7px 0 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .tab-btn.active {
+            background: #ffe683;
+            color: #664099;
+        }
+        .tab-content {
+            display: none;
+            background: rgba(255,255,255,0.09);
+            border-radius: 0 0 18px 18px;
+            padding: 32px 18px 18px 18px;
+            margin: 0 auto;
+            max-width: 400px;
+            min-height: 330px;
+            margin-bottom: 28px;
+        }
+        .tab-content.active { display: block; }
         .clicker-image {
             width: 200px;
             height: 200px;
             cursor: pointer;
             transition: transform 0.1s ease, box-shadow 0.2s;
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
-            margin-top: 40px;
+            margin-top: 10px;
         }
         .clicker-image.clicked {
             box-shadow: 0 0 20px 5px #ffdd57;
             transform: scale(1.1);
         }
-        .controls {
-            margin-top: 25px;
-            display: flex;
-            gap: 15px;
-        }
+        .controls { margin-top: 25px; display: flex; gap: 15px; }
         .btn {
             padding: 10px 24px;
             font-size: 1.1rem;
@@ -83,23 +98,46 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .btn:hover {
-            background: #ffe683;
+        .btn:hover { background: #ffe683; }
+        .timer { margin-top: 20px; font-size: 1.3rem; font-weight: 500; }
+        .quest { margin-bottom: 16px; }
+        .road-level {
+            margin-bottom: 18px;
+            padding: 8px 15px;
+            background: #23213a66;
+            border-radius: 7px;
+            box-shadow: 0 2px 8px #22222211;
         }
-        .timer {
-            margin-top: 20px;
-            font-size: 1.3rem;
-            font-weight: 500;
+        .road-level.active {
+            border: 2px solid #ffdd57;
+            background: #ffdd5744;
         }
+        .shop-item {
+            margin-bottom: 18px;
+            padding: 10px 15px;
+            background: #23213a66;
+            border-radius: 7px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shop-item.locked { opacity: 0.5; }
+        .shop-item .btn { font-size: 1rem; padding: 7px 18px; }
+        .quest-done { color: #ffdd57; font-weight: bold; }
     </style>
 </head>
 <body>
-    <!-- Валюта монет завжди зверху -->
     <div class="currency-box">
         <span class="coin-count-text" id="coinCount">0</span>
         <img src="coin.png" alt="Монети" class="coin-image">
     </div>
-    <div class="main-content">
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="clicker">Клікати</button>
+        <button class="tab-btn" data-tab="quests">Квести</button>
+        <button class="tab-btn" data-tab="road">Дорога кліків</button>
+        <button class="tab-btn" data-tab="shop">Магазин</button>
+    </div>
+    <div class="tab-content active" id="clicker">
         <img src="colt_scstore_cash_pin.png" alt="Клікни!" class="clicker-image" id="clickerImage">
         <div class="controls">
             <button class="btn" id="resetBtn">Скинути монети</button>
@@ -107,38 +145,221 @@
         <div class="timer" id="timerText"></div>
         <audio id="clickSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9c1f6c.mp3"></audio>
     </div>
+    <div class="tab-content" id="quests">
+        <h3>Щоденні квести</h3>
+        <div id="questList"></div>
+    </div>
+    <div class="tab-content" id="road">
+        <h3>Дорога кліків</h3>
+        <div id="roadList"></div>
+    </div>
+    <div class="tab-content" id="shop">
+        <h3>Магазин</h3>
+        <div id="shopList"></div>
+    </div>
     <script>
-        // Змінна монети оголошена на самому початку!
+        // --- Дані ---
         let moneti = Number(localStorage.getItem('moneti')) || 0;
-        let timer = null;
-        let timeLeft = 10;
-        let timerActive = false;
+        let clicks = Number(localStorage.getItem('clicks')) || 0;
+        let shopItems = JSON.parse(localStorage.getItem('shopItems')||'{}');
+        let questState = JSON.parse(localStorage.getItem('questState')||'{}');
+        let roadLevel = Number(localStorage.getItem('roadLevel')) || 0;
 
+        // --- Елементи ---
         const coinCountElem = document.getElementById('coinCount');
         const clickerImage = document.getElementById('clickerImage');
         const resetBtn = document.getElementById('resetBtn');
         const timerText = document.getElementById('timerText');
         const clickSound = document.getElementById('clickSound');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const questList = document.getElementById('questList');
+        const roadList = document.getElementById('roadList');
+        const shopList = document.getElementById('shopList');
+
+        // --- Квести ---
+        const today = new Date().toISOString().slice(0,10);
+        const quests = [
+            { id: 'quest1', desc: 'Зроби 20 кліків сьогодні', need: 20, reward: 10 },
+            { id: 'quest2', desc: 'Зароби 30 монет за день', need: 30, reward: 15 },
+            { id: 'quest3', desc: 'Відкрий рівень на дорозі кліків', need: 1, type: 'road', reward: 25 }
+        ];
+        // --- Дорога кліків ---
+        const roadLevels = [
+            { need: 50, name: 'Новачок', reward: 10 },
+            { need: 200, name: 'Клікер', reward: 50 },
+            { need: 500, name: 'Майстер', reward: 120 },
+            { need: 1200, name: 'Легенда', reward: 300 }
+        ];
+        // --- Магазин ---
+        const shopItemsData = [
+            { id: 'bonus1', name: '+2 монети за клік', price: 50, effect: 'double', ownedText: 'Вже куплено!' },
+            { id: 'bonus2', name: 'Автоклік 10 монет/хв', price: 120, effect: 'autoclick', ownedText: 'Автоклік активовано!' }
+        ];
 
         function updateCoinCount() {
             coinCountElem.textContent = moneti;
             localStorage.setItem('moneti', moneti);
         }
+        function updateClicks() {
+            localStorage.setItem('clicks', clicks);
+        }
         updateCoinCount();
 
+        // --- Клік ---
         clickerImage.addEventListener('click', () => {
-            moneti++;
+            let plus = shopItems['bonus1'] ? 2 : 1;
+            moneti += plus;
+            clicks++;
             updateCoinCount();
+            updateClicks();
             clickerImage.classList.add('clicked');
             clickSound.currentTime = 0;
             clickSound.play();
             setTimeout(() => clickerImage.classList.remove('clicked'), 120);
+            renderQuests();
+            renderRoad();
         });
 
         resetBtn.addEventListener('click', () => {
             moneti = 0;
+            clicks = 0;
             updateCoinCount();
+            updateClicks();
+            localStorage.setItem('roadLevel', 0);
+            shopItems = {};
+            localStorage.setItem('shopItems', '{}');
+            questState = {};
+            localStorage.setItem('questState', '{}');
+            renderShop();
+            renderQuests();
+            renderRoad();
         });
+
+        // --- Вкладки ---
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b=>b.classList.remove('active'));
+                tabContents.forEach(c=>c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // --- Квести ---
+        function renderQuests() {
+            questList.innerHTML = '';
+            quests.forEach(q => {
+                let done = false;
+                let progress = 0;
+                if(q.type === 'road') {
+                    done = roadLevel >= q.need;
+                    progress = roadLevel;
+                } else if(q.id === 'quest1') {
+                    done = (questState[q.id] && questState[q.id].date === today) || clicks >= q.need;
+                    progress = Math.min(clicks, q.need);
+                } else if(q.id === 'quest2') {
+                    done = (questState[q.id] && questState[q.id].date === today) || moneti >= q.need;
+                    progress = Math.min(moneti, q.need);
+                }
+                let btn = '';
+                if (!done && progress >= q.need) {
+                    btn = `<button class="btn" onclick="claimQuest('${q.id}')">Забрати нагороду (+${q.reward} монет)</button>`;
+                }
+                questList.innerHTML += `
+                    <div class="quest">
+                        <strong>${q.desc}</strong><br>
+                        Прогрес: ${progress}/${q.need}
+                        ${done ? ` <span class="quest-done">Виконано ✔</span>` : btn}
+                    </div>
+                `;
+            });
+        }
+        window.claimQuest = function(id) {
+            let q = quests.find(q=>q.id===id);
+            if(q) {
+                moneti += q.reward;
+                updateCoinCount();
+                questState[id] = { date: today };
+                localStorage.setItem('questState', JSON.stringify(questState));
+                renderQuests();
+            }
+        }
+
+        // --- Дорога кліків ---
+        function renderRoad() {
+            roadList.innerHTML = '';
+            let curLvl = roadLevel;
+            for(let i=0; i<roadLevels.length; i++) {
+                let lvl = roadLevels[i];
+                let active = clicks >= lvl.need;
+                let received = curLvl > i;
+                let btn = '';
+                if(active && !received) {
+                    btn = `<button class="btn" onclick="claimRoad(${i})">Забрати (+${lvl.reward} монет)</button>`;
+                }
+                roadList.innerHTML += `
+                    <div class="road-level ${active ? 'active':''}">
+                        <strong>Рівень ${i+1}: ${lvl.name}</strong><br>
+                        Кліків потрібно: ${lvl.need}<br>
+                        ${active ? (received ? "Отримано ✔" : btn) : `Прогрес: ${clicks}/${lvl.need}`}
+                    </div>
+                `;
+            }
+        }
+        window.claimRoad = function(idx) {
+            if(roadLevel <= idx) {
+                moneti += roadLevels[idx].reward;
+                updateCoinCount();
+                roadLevel = idx+1;
+                localStorage.setItem('roadLevel', roadLevel);
+                renderRoad();
+                renderQuests();
+            }
+        }
+
+        // --- Магазин ---
+        function renderShop() {
+            shopList.innerHTML = '';
+            shopItemsData.forEach(item => {
+                let owned = !!shopItems[item.id];
+                let locked = false;
+                if(item.id==='bonus2' && !shopItems['bonus1']) locked = true;
+                shopList.innerHTML += `
+                    <div class="shop-item ${owned ? 'locked':''} ${locked ? 'locked':''}">
+                        <span>${item.name} <br> <small>Ціна: ${item.price} монет</small></span>
+                        ${owned ? `<span>${item.ownedText}</span>` :
+                            locked ? `<span>Купи бонус1 спочатку</span>` :
+                            `<button class="btn" onclick="buyItem('${item.id}')">Купити</button>`
+                        }
+                    </div>
+                `;
+            });
+        }
+        window.buyItem = function(id) {
+            let item = shopItemsData.find(i=>i.id===id);
+            if(item && moneti >= item.price && !shopItems[id]) {
+                moneti -= item.price;
+                shopItems[id]=true;
+                localStorage.setItem('shopItems', JSON.stringify(shopItems));
+                updateCoinCount();
+                renderShop();
+                if(id==='bonus2') startAutoclick();
+            }
+        }
+        function startAutoclick() {
+            if(shopItems['bonus2']) {
+                setInterval(()=>{
+                    moneti += 10;
+                    updateCoinCount();
+                },60000);
+            }
+        }
+        // --- Ініціалізація ---
+        renderQuests();
+        renderRoad();
+        renderShop();
+        if(shopItems['bonus2']) startAutoclick();
     </script>
 </body>
 </html>
