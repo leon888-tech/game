@@ -11,6 +11,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
             color: white;
+            overflow-x: hidden;
         }
         .currency-box {
             position: fixed;
@@ -42,12 +43,19 @@
             box-shadow: 0 0 8px #ffdd5788;
             object-fit: contain;
         }
-        .tabs {
+        .tab-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            background: rgba(255,255,255,0.09);
             display: flex;
-            margin-top: 100px;
-            width: 100%;
             justify-content: center;
             gap: 10px;
+            box-shadow: 0 -8px 24px 0 #764ba233;
+            z-index: 1000;
+            padding: 12px 0 10px 0;
+            border-radius: 18px 18px 0 0;
         }
         .tab-btn {
             padding: 10px 24px;
@@ -55,9 +63,10 @@
             color: #764ba2;
             font-weight: bold;
             border: none;
-            border-radius: 7px 7px 0 0;
+            border-radius: 7px;
             cursor: pointer;
             transition: background 0.2s;
+            font-size: 1.08rem;
         }
         .tab-btn.active {
             background: #ffe683;
@@ -66,12 +75,13 @@
         .tab-content {
             display: none;
             background: rgba(255,255,255,0.09);
-            border-radius: 0 0 18px 18px;
+            border-radius: 18px;
             padding: 32px 18px 18px 18px;
             margin: 0 auto;
             max-width: 400px;
             min-height: 330px;
             margin-bottom: 28px;
+            margin-top: 90px;
         }
         .tab-content.active { display: block; }
         .clicker-image {
@@ -124,18 +134,28 @@
         .shop-item.locked { opacity: 0.5; }
         .shop-item .btn { font-size: 1rem; padding: 7px 18px; }
         .quest-done { color: #ffdd57; font-weight: bold; }
+        @media (max-width: 500px) {
+            .tab-content {
+                max-width: 98vw;
+                min-height: 220px;
+                margin-bottom: 56px;
+                margin-top: 74px;
+            }
+            .currency-box {
+                min-width: 140px;
+                padding: 10px 12px 9px 14px;
+            }
+            .coin-count-text { font-size: 1.3rem; }
+            .coin-image { width: 32px; height: 32px; }
+            .tab-btn { padding: 7px 10px; font-size: 0.98rem;}
+            .tab-footer { padding: 8px 0 6px 0;}
+        }
     </style>
 </head>
 <body>
     <div class="currency-box">
         <span class="coin-count-text" id="coinCount">0</span>
         <img src="coin.png" alt="Монети" class="coin-image">
-    </div>
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="clicker">Клікати</button>
-        <button class="tab-btn" data-tab="quests">Квести</button>
-        <button class="tab-btn" data-tab="road">Дорога кліків</button>
-        <button class="tab-btn" data-tab="shop">Магазин</button>
     </div>
     <div class="tab-content active" id="clicker">
         <img src="colt_scstore_cash_pin.png" alt="Клікни!" class="clicker-image" id="clickerImage">
@@ -156,6 +176,12 @@
     <div class="tab-content" id="shop">
         <h3>Магазин</h3>
         <div id="shopList"></div>
+    </div>
+    <div class="tab-footer">
+        <button class="tab-btn active" data-tab="clicker">Клікати</button>
+        <button class="tab-btn" data-tab="quests">Квести</button>
+        <button class="tab-btn" data-tab="road">Дорога кліків</button>
+        <button class="tab-btn" data-tab="shop">Магазин</button>
     </div>
     <script>
         // --- Дані ---
